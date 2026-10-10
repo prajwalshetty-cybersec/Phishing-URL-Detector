@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PHISHING URL DETECTOR // THREAT REPORT</title>
+<script>document.documentElement.className='js';</script>
+<style>
+:root{--bg:#050000;--red:#ff1744;--redg:rgba(255,23,68,.55);--txt:#ffd9de;--mut:#a65b66;--panel:rgba(14,2,4,.88)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:"Cascadia Mono","Fira Code",Consolas,"Courier New",monospace}
+body{min-height:100vh;overflow-x:hidden}
+#rain{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:.32}
+body::before{content:"";position:fixed;inset:0;z-index:3;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.30) 0,rgba(0,0,0,.30) 1px,transparent 1px,transparent 3px)}
+body::after{content:"";position:fixed;inset:0;z-index:3;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.8) 100%)}
+.wrap{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:26px 14px 60px;animation:flick 7s infinite}
+
+.term{border:1px solid var(--red);background:var(--panel);box-shadow:0 0 34px -6px var(--redg);margin-bottom:18px}
+.tbar{display:flex;align-items:center;gap:7px;padding:7px 12px;background:rgba(255,23,68,.14);border-bottom:1px solid var(--red);font-size:12px;color:var(--mut)}
+.tbar i{width:10px;height:10px;border-radius:50%;background:var(--red);opacity:.85}
+.tbar i:nth-child(2){opacity:.55}.tbar i:nth-child(3){opacity:.3}
+.tbar span{margin-left:8px;letter-spacing:1px}
+.tbody{padding:16px 18px 18px}
+.ascii{margin:0 0 6px;color:#ff5470;font-weight:700;font-size:15px;line-height:1.15;text-shadow:0 0 5px var(--redg);overflow-x:auto}
+
+.glitch{position:relative;display:inline-block;margin:8px 0 14px;font-size:clamp(24px,6vw,42px);font-weight:700;letter-spacing:5px;color:#fff;text-shadow:0 0 14px var(--redg)}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;width:100%;height:100%;overflow:hidden}
+.glitch::before{left:2px;color:var(--red);animation:g1 2.6s infinite linear alternate-reverse}
+.glitch::after{left:-2px;color:#ff8a98;animation:g2 3.1s infinite linear alternate-reverse}
+@keyframes g1{0%{clip-path:inset(20% 0 70% 0)}20%{clip-path:inset(62% 0 10% 0)}40%{clip-path:inset(40% 0 40% 0)}60%{clip-path:inset(82% 0 4% 0)}80%{clip-path:inset(8% 0 82% 0)}100%{clip-path:inset(50% 0 30% 0)}}
+@keyframes g2{0%{clip-path:inset(70% 0 12% 0)}25%{clip-path:inset(12% 0 72% 0)}50%{clip-path:inset(55% 0 25% 0)}75%{clip-path:inset(30% 0 52% 0)}100%{clip-path:inset(88% 0 2% 0)}}
+
+.cmd{font-size:14px;margin:4px 0 12px;word-break:break-all}
+.ps{color:var(--red);font-weight:700}
+.caret{display:inline-block;width:9px;height:1em;background:var(--red);vertical-align:-2px;margin-left:2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.boot{font-size:12.5px;line-height:1.7;color:var(--mut)}
+.boot .okk{color:var(--red);font-weight:700}
+.meta{margin-top:10px;font-size:12px;color:var(--mut);display:flex;gap:18px;flex-wrap:wrap}
+.meta b{color:var(--txt)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.stat{border:1px solid var(--c);background:var(--panel);padding:10px 14px;display:flex;align-items:baseline;justify-content:space-between;box-shadow:0 0 18px -8px var(--c)}
+.stat b{font-size:28px;color:var(--c);text-shadow:0 0 10px var(--c)}
+.stat span{font-size:11px;letter-spacing:2px;color:var(--mut)}
+
+.card{border:1px solid var(--c);border-left-width:4px;background:var(--panel);padding:14px 16px 12px;margin-bottom:16px;box-shadow:0 0 26px -10px var(--c)}
+.chead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{font-size:11px;letter-spacing:2px;color:var(--mut)}
+.verdict{font-weight:700;letter-spacing:3px;font-size:13px;color:var(--c);border:1px solid var(--c);padding:3px 12px;text-shadow:0 0 8px var(--c)}
+.bad .verdict{animation:blink 1.2s steps(2) infinite}
+.url{margin:10px 0 2px;color:#fff;font-weight:700;word-break:break-all;font-size:14px}
+.url::before{content:"TARGET> ";color:var(--c)}
+.meter{position:relative;height:18px;margin:12px 0 4px;border:1px solid var(--c);background:rgba(255,255,255,.04)}
+.fill{height:100%;width:var(--w);background:var(--c);box-shadow:0 0 14px var(--c);transition:width 1.3s cubic-bezier(.2,.8,.2,1);
+  -webkit-mask:repeating-linear-gradient(90deg,#000 0 8px,transparent 8px 10px);mask:repeating-linear-gradient(90deg,#000 0 8px,transparent 8px 10px)}
+.js .fill{width:0}
+.mlabel{font-size:11px;letter-spacing:2px;color:var(--mut);margin-bottom:10px}
+.mlabel b{color:var(--c)}
+.log{list-style:none;margin:0;padding:8px 0 0;border-top:1px dashed rgba(255,23,68,.35);font-size:13px;line-height:1.55}
+.log li{margin:3px 0;padding-left:2px;color:var(--txt)}
+.log li::before{content:"> ";color:var(--mut)}
+.sev{display:inline-block;min-width:38px;margin-right:8px;font-weight:700}
+.hi{color:#fff}.hi .sev{color:#ff1744;text-shadow:0 0 8px #ff1744}
+.mid .sev{color:#ff6e40}
+.lo{color:#d9b3b8}.lo .sev{color:var(--mut)}
+.note{margin-top:8px;font-size:12px;color:var(--mut)}
+
+footer{margin-top:26px;text-align:center;font-size:11px;letter-spacing:1px;color:var(--mut)}
+footer b{color:var(--red)}
+
+.js .reveal{opacity:0;transform:translateY(4px);transition:opacity .35s ease,transform .35s ease}
+.js .reveal.show{opacity:1;transform:none}
+
+@keyframes flick{0%,90%,100%{opacity:1}91%{opacity:.88}92%{opacity:1}95%{opacity:.94}96%{opacity:1}}
+@media (max-width:560px){.ascii{font-size:9px}.tbody{padding:12px}.sev{min-width:34px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.js .reveal{opacity:1;transform:none}}
+::selection{background:var(--red);color:#000}
+</style>
+</head>
+<body>
+<canvas id="rain" aria-hidden="true"></canvas>
+<div class="wrap">
+  <div class="term">
+    <div class="tbar"><i></i><i></i><i></i><span>root@phishing-detector: ~/scan</span></div>
+    <div class="tbody">
+      <pre class="ascii"> ____  _   _ ___ ____  _   _ ___ _   _  ____
+|  _ \| | | |_ _/ ___|| | | |_ _| \ | |/ ___|
+| |_) | |_| || |\___ \| |_| || ||  \| | |  _
+|  __/|  _  || | ___) |  _  || || |\  | |_| |
+|_|   |_| |_|___|____/|_| |_|___|_| \_|\____|
+      U R L   D E T E C T O R   //   v2</pre>
+      <h1 class="glitch" data-text="THREAT REPORT">THREAT REPORT</h1>
+      <div class="cmd"><span class="ps">root@detector:~#</span> <span id="typed" data-text="phishing_detector --scan --batch 10 targets">phishing_detector --scan --batch 10 targets</span><span class="caret"></span></div>
+      <div class="boot">
+        <div class="reveal">[ <span class="okk">OK</span> ] heuristic engine loaded (typosquat / brand / host / keyword rules)</div>
+        <div class="reveal">[ <span class="okk">OK</span> ] offline mode: no network requests were made</div>
+        <div class="reveal">[ <span class="okk">OK</span> ] analysis complete, 10 target(s) scored</div>
+      </div>
+      <div class="meta"><span>SCAN TIME <b>2026-10-10 09:56:22</b></span><span>TARGETS <b>10</b></span></div>
+    </div>
+  </div>
+
+  <div class="stats"><div class="stat reveal" style="--c:#ff1744"><b>4</b><span>PHISHING</span></div><div class="stat reveal" style="--c:#ff9100"><b>3</b><span>SUSPICIOUS</span></div><div class="stat reveal" style="--c:#00e676"><b>3</b><span>CLEAN</span></div></div>
+
+  <section class="card reveal ok" style="--c:#00e676;--w:0%"><div class="chead"><span class="tag">[TARGET_01]</span><span class="verdict">NO OBVIOUS RED FLAGS</span></div><div class="url">https://www.wikipedia.org</div><div class="meter"><div class="fill" data-score="0"></div></div><div class="mlabel">THREAT SCORE <b>0/100</b></div><ul class="log"><li class="reveal lo"><span class="sev">--</span>No indicators triggered.</li></ul><div class="note reveal">[i] Only the URL text was analysed. This is not proof of safety.</div></section>
+  <section class="card reveal ok" style="--c:#00e676;--w:5%"><div class="chead"><span class="tag">[TARGET_02]</span><span class="verdict">NO OBVIOUS RED FLAGS</span></div><div class="url">https://www.paypal.com/signin</div><div class="meter"><div class="fill" data-score="5"></div></div><div class="mlabel">THREAT SCORE <b>5/100</b></div><ul class="log"><li class="reveal lo"><span class="sev">+5</span>Phishing-style keyword(s): signin.</li></ul><div class="note reveal">[i] Only the URL text was analysed. This is not proof of safety.</div></section>
+  <section class="card reveal bad" style="--c:#ff1744;--w:65%"><div class="chead"><span class="tag">[TARGET_03]</span><span class="verdict">LIKELY PHISHING</span></div><div class="url">http://paypa1-secure-login.com/verify</div><div class="meter"><div class="fill" data-score="65"></div></div><div class="mlabel">THREAT SCORE <b>65/100</b></div><ul class="log"><li class="reveal hi"><span class="sev">+35</span>&#x27;paypa1&#x27; looks like a misspelling/look-alike of &#x27;paypal&#x27; (typosquatting).</li><li class="reveal mid"><span class="sev">+15</span>Phishing-style keyword(s): login, verify, secure.</li><li class="reveal mid"><span class="sev">+10</span>Not HTTPS; anything typed on this page is sent unencrypted.</li><li class="reveal lo"><span class="sev">+5</span>Multiple hyphens in the domain.</li></ul></section>
+  <section class="card reveal bad" style="--c:#ff1744;--w:45%"><div class="chead"><span class="tag">[TARGET_04]</span><span class="verdict">LIKELY PHISHING</span></div><div class="url">https://arnazon.com/account/update</div><div class="meter"><div class="fill" data-score="45"></div></div><div class="mlabel">THREAT SCORE <b>45/100</b></div><ul class="log"><li class="reveal hi"><span class="sev">+35</span>&#x27;arnazon&#x27; looks like a misspelling/look-alike of &#x27;amazon&#x27; (typosquatting).</li><li class="reveal mid"><span class="sev">+10</span>Phishing-style keyword(s): account, update.</li></ul></section>
+  <section class="card reveal bad" style="--c:#ff1744;--w:75%"><div class="chead"><span class="tag">[TARGET_05]</span><span class="verdict">LIKELY PHISHING</span></div><div class="url">https://secure-hdfcbank-kyc.web.app/login</div><div class="meter"><div class="fill" data-score="75"></div></div><div class="mlabel">THREAT SCORE <b>75/100</b></div><ul class="log"><li class="reveal hi"><span class="sev">+30</span>Mentions the brand &#x27;hdfcbank&#x27; in the domain, but &#x27;web.app&#x27; is not an official hdfcbank domain.</li><li class="reveal mid"><span class="sev">+15</span>Hosted on a free/public platform (web.app) that attackers commonly abuse.</li><li class="reveal mid"><span class="sev">+15</span>Phishing-style keyword(s): login, secure, kyc.</li><li class="reveal mid"><span class="sev">+10</span>Combines a free/cheap host with brand or login-style wording, a very common phishing combination.</li><li class="reveal lo"><span class="sev">+5</span>Multiple hyphens in the domain.</li></ul></section>
+  <section class="card reveal warn" style="--c:#ff9100;--w:25%"><div class="chead"><span class="tag">[TARGET_06]</span><span class="verdict">SUSPICIOUS</span></div><div class="url">https://sites.google.com/view/microsoft-support-alert</div><div class="meter"><div class="fill" data-score="25"></div></div><div class="mlabel">THREAT SCORE <b>25/100</b></div><ul class="log"><li class="reveal mid"><span class="sev">+15</span>Mentions &#x27;microsoft&#x27; in the path/query while hosted on &#x27;google.com&#x27; (not official).</li><li class="reveal mid"><span class="sev">+10</span>Phishing-style keyword(s): support, alert.</li></ul></section>
+  <section class="card reveal bad" style="--c:#ff1744;--w:95%"><div class="chead"><span class="tag">[TARGET_07]</span><span class="verdict">LIKELY PHISHING</span></div><div class="url">http://paypal.com.verify-account.xyz/signin</div><div class="meter"><div class="fill" data-score="95"></div></div><div class="mlabel">THREAT SCORE <b>95/100</b></div><ul class="log"><li class="reveal hi"><span class="sev">+30</span>Mentions the brand &#x27;paypal&#x27; in the domain, but &#x27;verify-account.xyz&#x27; is not an official paypal domain.</li><li class="reveal mid"><span class="sev">+20</span>A well-known TLD appears inside the hostname (e.g. paypal.com.evil.xyz) to look legitimate.</li><li class="reveal mid"><span class="sev">+15</span>Phishing-style keyword(s): signin, verify, account.</li><li class="reveal mid"><span class="sev">+10</span>Uses the &#x27;.xyz&#x27; TLD, which is cheap/free and overrepresented in phishing.</li><li class="reveal mid"><span class="sev">+10</span>Not HTTPS; anything typed on this page is sent unencrypted.</li><li class="reveal mid"><span class="sev">+10</span>Combines a free/cheap host with brand or login-style wording, a very common phishing combination.</li></ul></section>
+  <section class="card reveal warn" style="--c:#ff9100;--w:20%"><div class="chead"><span class="tag">[TARGET_08]</span><span class="verdict">SUSPICIOUS</span></div><div class="url">https://bit.ly/3abcXYZ</div><div class="meter"><div class="fill" data-score="20"></div></div><div class="mlabel">THREAT SCORE <b>20/100</b></div><ul class="log"><li class="reveal mid"><span class="sev">+20</span>Link shortener hides the real destination; expand it before trusting it.</li></ul></section>
+  <section class="card reveal warn" style="--c:#ff9100;--w:40%"><div class="chead"><span class="tag">[TARGET_09]</span><span class="verdict">SUSPICIOUS</span></div><div class="url">http://192.168.1.1/login.php</div><div class="meter"><div class="fill" data-score="40"></div></div><div class="mlabel">THREAT SCORE <b>40/100</b></div><ul class="log"><li class="reveal hi"><span class="sev">+25</span>Uses a raw IP address instead of a domain name.</li><li class="reveal mid"><span class="sev">+10</span>Not HTTPS; anything typed on this page is sent unencrypted.</li><li class="reveal lo"><span class="sev">+5</span>Phishing-style keyword(s): login.</li></ul></section>
+  <section class="card reveal ok" style="--c:#00e676;--w:0%"><div class="chead"><span class="tag">[TARGET_10]</span><span class="verdict">NO OBVIOUS RED FLAGS</span></div><div class="url">https://github.com/anthropics</div><div class="meter"><div class="fill" data-score="0"></div></div><div class="mlabel">THREAT SCORE <b>0/100</b></div><ul class="log"><li class="reveal lo"><span class="sev">--</span>No indicators triggered.</li></ul><div class="note reveal">[i] Only the URL text was analysed. This is not proof of safety.</div></section>
+
+  <footer>
+    <b>PHISHING URL DETECTOR</b> // heuristic analysis of URL text only // not proof of safety
+  </footer>
+</div>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- red matrix rain ---- */
+  var cv = document.getElementById('rain');
+  if (cv && !reduce) {
+    var ctx = cv.getContext('2d'), W, H, cols, drops, fs = 16;
+    var chars = '01ABCDEF<>/{}[]$#%&*+=!?@'.split('');
+    var size = function(){
+      W = cv.width = window.innerWidth; H = cv.height = window.innerHeight;
+      cols = Math.floor(W / fs); drops = [];
+      for (var i = 0; i < cols; i++) drops[i] = Math.random() * -40;
+    };
+    size(); window.addEventListener('resize', size);
+    setInterval(function(){
+      ctx.fillStyle = 'rgba(5,0,0,.12)'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#ff1744'; ctx.font = fs + 'px monospace';
+      for (var i = 0; i < cols; i++) {
+        ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * fs, drops[i] * fs);
+        if (drops[i] * fs > H && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    }, 60);
+  }
+
+  /* ---- boot sequence ---- */
+  var items = [].slice.call(document.querySelectorAll('.reveal'));
+  var fillBar = function(el){
+    var f = el.querySelector ? el.querySelector('.fill') : null;
+    if (f) setTimeout(function(){ f.style.width = f.getAttribute('data-score') + '%'; }, 80);
+  };
+  if (reduce) {
+    items.forEach(function(e){ e.classList.add('show'); fillBar(e); });
+    return;
+  }
+  var typed = document.getElementById('typed');
+  var text = typed ? (typed.getAttribute('data-text') || '') : '';
+  if (typed) typed.textContent = '';
+  var i = 0;
+  var typeStep = function(){
+    if (typed && i <= text.length) { typed.textContent = text.slice(0, i++); setTimeout(typeStep, 16); }
+    else reveal(0);
+  };
+  var reveal = function(n){
+    if (n >= items.length) return;
+    var e = items[n];
+    e.classList.add('show'); fillBar(e);
+    setTimeout(function(){ reveal(n + 1); }, e.classList.contains('card') ? 320 : 120);
+  };
+  typeStep();
+})();
+</script>
+</body>
+</html>
